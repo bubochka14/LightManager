@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qtquickcontrols2.conf</file>
+        <file>Main.qml</file>
+        <file>moon.png</file>
+        <file>sun.png</file>
+    </qresource>
+</RCC>
