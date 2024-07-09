@@ -29,6 +29,25 @@ void App::exit(int code)
 {
     _qApp->exit(code);
 }
+void App::setSerialTransport(std::shared_ptr <SerialTransport> other)
+{
+    _serial = other;
+}
 App::~App()
 {
+}
+
+
+std::shared_ptr<SerialTransport> App::serialTransport() const
+{
+    return _serial;
+}
+
+void App::setMessageDispatcher(std::shared_ptr<MessageDispatcher> other)
+{
+    _disp = other;
+}
+std::shared_ptr<MessageDispatcher> App::messageDispatcher() const
+{
+    return _disp;
 }

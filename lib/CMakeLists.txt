@@ -1,6 +1,12 @@
 set(LIB_RESOURCES 
 )
 set(LIB_SOURCES
+    atransport.h
+    atransport.cpp
+    serialtransport.h
+    serialtransport.cpp
+    messagedispatcher.cpp
+    messagedispatcher.h
 )
 
 qt_add_qml_module(lightManager STATIC
