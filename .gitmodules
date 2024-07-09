@@ -1,0 +1,6 @@
+[submodule "tests/--force"]
+	path = tests/--force
+	url = https://github.com/google/googletest
+[submodule "tests/googletest"]
+	path = tests/googletest
+	url = https://github.com/google/googletest
