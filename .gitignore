@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+# my ignore
+out/*
+CMakePresets.json
+tests/googletest/
