@@ -10,8 +10,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(TEST_SOURCES
     app_test.cpp
     messagedispatchertest.cpp
-    mockseriltransport.cpp
-    mockmessagedispatcher.cpp
+    mockserialtransport.h
+    mockmessagedispatcher.h
     ${APP_SOURCE}/app.h
     ${APP_SOURCE}/app.cpp
     ${APP_SOURCE}/app.qrc
