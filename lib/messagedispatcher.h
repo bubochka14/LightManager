@@ -8,13 +8,13 @@ public:
     explicit MessageDispatcher(QObject* parent = nullptr);
     virtual ~MessageDispatcher();
 public slots:
-    virtual bool postData(const char* msg);
-    virtual bool setUserIllumination(double illum);
+    virtual bool postMessage(const char* msg);
+    virtual bool setManualIllumination(double illum);
     virtual bool setMode(const QString& other);
 signals:
     void modeChanged(const QString&);
-    void sensorValueChanged(double);
-    void transferData(const char* msg);
+    void sensorIlluminanceChanged(double);
+    void transferMessage(const char* msg);
 };
 
 #endif // ATRANSPORT_H

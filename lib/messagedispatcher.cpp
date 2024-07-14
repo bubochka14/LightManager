@@ -8,7 +8,7 @@ bool MessageDispatcher::postMessage(const char* msg)
     return false;
 }
 
-bool MessageDispatcher::setUserIllumination(double illum)
+bool MessageDispatcher::setManualIllumination(double illum)
 {
     return false;
 }
