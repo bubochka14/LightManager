@@ -2,32 +2,25 @@
 #define APP_H
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQmlComponent>
-#include <QQuickItem>
-#include <QSettings>
+
 #include "serialtransport.h"
 #include "messagedispatcher.h"
-class App
+#include "qloggingcategory.h"
+Q_DECLARE_LOGGING_CATEGORY(LC_APP);
+class App : public QObject
 {
+    Q_OBJECT;
 public:
     explicit App(int argc, char **argv);
     int exec();
     void exit(int code=0);
 public:
     QQmlApplicationEngine * engine() const;
-    void setSerialTransport(std::shared_ptr<SerialTransport> other);
-    std::shared_ptr<SerialTransport> serialTransport() const;
-
-    void setMessageDispatcher(std::shared_ptr<MessageDispatcher> other);
-    std::shared_ptr<MessageDispatcher> messageDispatcher() const;
-    ~App();
-private:
-    std::shared_ptr<QGuiApplication> _qApp;
-    std::shared_ptr<QQmlApplicationEngine> _engine;
-    std::shared_ptr<SerialTransport> _serial;
-    std::shared_ptr<MessageDispatcher> _disp;
-    QObject * _view;
-    QSettings _sett;
+    void setSerialTransport(SerialTransport* other);
+    SerialTransport* serialTransport() const;
+    void setMessageDispatcher(MessageDispatcher* other);
+    MessageDispatcher* messageDispatcher() const;
+    virtual ~App();
 };
 
 #endif // APP_H
