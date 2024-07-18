@@ -1,3 +1,4 @@
+#pragma once
 #include "serialtransport.h"
 #include <gmock/gmock.h>
 #include <qobject.h>
