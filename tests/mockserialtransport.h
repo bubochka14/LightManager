@@ -1,5 +1,7 @@
 #include "serialtransport.h"
 #include <gmock/gmock.h>
+#include <qobject.h>
+#include "qstringoutput.h"
 class MockSerialTransport : public SerialTransport
 {
 public:

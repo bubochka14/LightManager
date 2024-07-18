@@ -3,6 +3,7 @@
 #include <qsignalspy.h>
 #include <thread>
 #include <chrono>
+#include "qstringoutput.h"
 
 using namespace Qt::Literals::StringLiterals;
 using namespace testing;

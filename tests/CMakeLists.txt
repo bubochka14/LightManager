@@ -12,6 +12,7 @@ set(TEST_SOURCES
     messagedispatchertest.cpp
     mockserialtransport.h
     mockmessagedispatcher.h
+    qstringoutput.h
     ${APP_SOURCE}/app.h
     ${APP_SOURCE}/app.cpp
     ${APP_SOURCE}/app.qrc

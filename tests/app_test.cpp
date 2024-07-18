@@ -7,6 +7,8 @@
 #include <QTimer>
 #include "mockserialtransport.h"
 #include "mockmessagedispatcher.h"
+#include "qstringoutput.h"
+
 using namespace testing;
 int _argc;
 char** _argv;

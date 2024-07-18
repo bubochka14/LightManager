@@ -1,5 +1,7 @@
 #include <gmock/gmock.h>
 #include "messagedispatcher.h"
+#include "qstringoutput.h"
+
 class MockMessageDispatcher : public MessageDispatcher
 {
 public:
