@@ -4,9 +4,12 @@
 
 class MockMessageDispatcher : public MessageDispatcher
 {
+	Q_OBJECT;
 public:
-	MOCK_METHOD(bool, postMessage,(const char*),(override));
-	MOCK_METHOD(bool, setManualIllumination,(double),(override));
-	MOCK_METHOD(bool, setMode,(const QString&),(override));
-	
+	explicit MockMessageDispatcher(QObject* parent = nullptr) : MessageDispatcher(parent) {}
+	MOCK_METHOD(void, postMessage,(const QString&),(override));
+	MOCK_METHOD(void, setManualIllumination,(double),(override));
+	MOCK_METHOD(void, setMode,(const QString&),(override));
+	MOCK_METHOD(void, requestMode,(),(override));
+	MOCK_METHOD(void, requestSensorIlluminance,(),(override));
 };

@@ -3,16 +3,19 @@ MessageDispatcher::MessageDispatcher(QObject* parent)
     :QObject(parent)
 {}
 MessageDispatcher::~MessageDispatcher(){}
-bool MessageDispatcher::postMessage(const char* msg)
+void MessageDispatcher::postMessage(const QString& msg)
 {
-    return false;
 }
+void MessageDispatcher::requestMode()
+{
+}
+void MessageDispatcher::requestSensorIlluminance()
+{
 
-bool MessageDispatcher::setManualIllumination(double illum)
-{
-    return false;
 }
-bool MessageDispatcher::setMode(const QString& other)
+void MessageDispatcher::setManualIllumination(double illum)
 {
-    return false;
+}
+void MessageDispatcher::setMode(const QString& other)
+{
 }
