@@ -2,7 +2,7 @@
 #define ATRANSPORT_H
 #include <QObject>
 #include <QString>
-
+#include <qregularexpression.h>
 class MessageDispatcher: public QObject
 {
     Q_OBJECT;
@@ -20,6 +20,7 @@ signals:
     void sensorIlluminanceChanged(double);
     void transferMessage(const QString&);
 private:
+    QString _messageCache;
 };
 
 #endif // ATRANSPORT_H
