@@ -4,7 +4,9 @@
 #include "qstringoutput.h"
 class MockSerialTransport : public SerialTransport
 {
+    Q_OBJECT;
 public:
+    explicit MockSerialTransport(QObject* parent = nullptr) : SerialTransport(parent) {}
     MOCK_METHOD(QStringList, availablePorts, (), (const,override));
     MOCK_METHOD(QString, openedPort, (), (const, override));
     MOCK_METHOD(bool, openPort, (const QString&), (override));
