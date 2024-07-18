@@ -68,12 +68,6 @@ Window {
             objectName: "modeBtnGroup"
             id: modeBtnGroup
         }
-        Connections {
-            target: dispatcher
-            function onSensorIlluminanceChanged(val) {
-                root.sensorIllum = val
-            }
-        }
         ColumnLayout {
             anchors.fill:parent
             Row {
@@ -85,9 +79,6 @@ Window {
                 ComboBox {
                     id: portCombo
                     objectName: "portCombo"
-                    onModelChanged: {
-                        currentIndex = -1
-                    }
                     enabled: count !== 0
                     model: root.portNames
                 }

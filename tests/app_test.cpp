@@ -45,23 +45,18 @@ protected:
     QQuickWindow* window;
 };
 
-
-TEST_F(AppFixture, UIPortConnectTest)
+TEST_F(AppFixture, UIPortsDisplay)
 {
     ASSERT_NE(window, nullptr);
-    QSignalSpy connectSpy(window, SIGNAL(connectToPort(const QString&)));
     auto portCombo = window->findChild<QQuickItem*>("portCombo");
-    auto connectBtn = window->findChild<QQuickItem*>("connectBtn");
-    auto serialMock = new MockSerialTransport(app);
-    auto dispMock = new MockMessageDispatcher(app);
     ASSERT_NE(portCombo, nullptr);
-    ASSERT_NE(connectBtn, nullptr);
-
-    ON_CALL(*serialMock, availablePorts())
-        .WillByDefault(Return(QStringList() << "test_port1" << "test_port2" << "test_port3"));
-    EXPECT_CALL(*serialMock, openPort(QString("test_port2"))).Times(1);;
-
-    app->setSerialTransport(serialMock);
+    auto serialMock1 = new NiceMock<MockSerialTransport>(app);
+    auto serialMock2 = new NiceMock<MockSerialTransport>(app);
+    EXPECT_CALL(*serialMock1, availablePorts()).Times(AtLeast(1))
+        .WillOnce(Return(QStringList() << "test_port1" << "test_port2" << "test_port3"));
+    EXPECT_CALL(*serialMock2, availablePorts()).Times(AtLeast(1))
+        .WillOnce(Return(QStringList()));
+    app->setSerialTransport(serialMock1);
     EXPECT_EQ(portCombo->property("count").toInt(), 3);
     int index;
     QMetaObject::invokeMethod(portCombo, "find",
@@ -69,27 +64,68 @@ TEST_F(AppFixture, UIPortConnectTest)
         Q_ARG(QString, "test_port2")
     );
     ASSERT_NE(index, -1);
-    portCombo->setProperty("currentIndex", index);
+    app->setSerialTransport(serialMock2);
+    EXPECT_EQ(portCombo->property("count").toInt(), 0);
+    EXPECT_FALSE(portCombo->property("enabled").toBool());
+
+}
+TEST_F(AppFixture, UIConnectWithResponse)
+{
+    ASSERT_NE(window, nullptr);
+    QSignalSpy connectSpy(window, SIGNAL(connectToPort(const QString&)));
+    auto portCombo = window->findChild<QQuickItem*>("portCombo");
+    auto connectBtn = window->findChild<QQuickItem*>("connectBtn");
+    auto serialMock = new NiceMock<MockSerialTransport>(app);
+    auto dispMock = new StrictMock<MockMessageDispatcher>(app);
+    ASSERT_NE(portCombo, nullptr);
+    ASSERT_NE(connectBtn, nullptr);
+
+    ON_CALL(*serialMock, availablePorts())
+        .WillByDefault(Return(QStringList() << "test_port1"));
+    EXPECT_CALL(*serialMock, openPort(QString("test_port1"))).Times(1);;
+    app->setMessageDispatcher(dispMock);
+    app->setSerialTransport(serialMock);
     QString beforeRequestState, afterRequestState;
     EXPECT_CALL(*dispMock, requestMode())
         .Times(1)
         .WillOnce(Invoke([&]() {
-        beforeRequestState = window->property("pageState").toString();
+            emit dispMock->modeChanged("manual");
+            beforeRequestState = window->property("pageState").toString();
             }));
-    EXPECT_CALL(*dispMock, requestSensorIlluminance()).Times(1);
+    EXPECT_CALL(*dispMock, requestSensorIlluminance())
+        .Times(1)
+        .WillOnce(Invoke([&]() {
+            emit dispMock->sensorIlluminanceChanged(0.5);
+            }));
     mouseClick(connectBtn);
     ASSERT_EQ(connectSpy.count(), 1);
-    EXPECT_EQ(connectSpy.at(0).at(0).toString(), "test_port2");
+    EXPECT_EQ(connectSpy.at(0).at(0).toString(), "test_port1");
     EXPECT_EQ(beforeRequestState, "connecting");
-    emit dispMock->modeChanged("manual");
-    emit dispMock->sensorIlluminanceChanged(0.5);
     EXPECT_EQ(window->property("pageState").toString(), "connected");
 }
-TEST_F(AppFixture, UISensorIlluminanceChangingTest)
+TEST_F(AppFixture, UIConnectWithNoResponse)
+{
+    ASSERT_NE(window, nullptr);
+    auto portCombo = window->findChild<QQuickItem*>("portCombo");
+    auto connectBtn = window->findChild<QQuickItem*>("connectBtn");
+    auto serialMock = new NiceMock<MockSerialTransport>(app);
+    auto dispMock = new NiceMock<MockMessageDispatcher>(app);
+    ASSERT_NE(portCombo, nullptr);
+    ASSERT_NE(connectBtn, nullptr);
+
+    ON_CALL(*serialMock, availablePorts())
+        .WillByDefault(Return(QStringList() << "test_port1"));
+    app->setMessageDispatcher(dispMock);
+    app->setSerialTransport(serialMock);
+    mouseClick(connectBtn);
+    std::this_thread::sleep_for(std::chrono::microseconds(app->connectionTimeout()));
+    EXPECT_EQ(window->property("pageState").toString(), "disconnected");
+}
+TEST_F(AppFixture, UISensorIlluminanceChanging)
 {
     ASSERT_NE(window, nullptr);
     auto mockDispatcher = new MockMessageDispatcher(app);
-    auto dummySerial = new MockSerialTransport(app);
+    auto dummySerial = new NiceMock<MockSerialTransport>(app);
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(dummySerial);
     auto icon = window->findChild<QQuickItem*>("sensorIcon");
@@ -110,7 +146,7 @@ TEST_F(AppFixture, UISettingWorkmodeTest)
 {
     ASSERT_NE(window, nullptr);
     auto mockDispatcher = new MockMessageDispatcher(app);
-    auto dummySerial = new MockSerialTransport();
+    auto dummySerial = new NiceMock<MockSerialTransport>();
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(dummySerial);
     auto sensorModeRadio = window->findChild<QQuickItem*>("sensorModeRadio");
@@ -137,7 +173,7 @@ TEST_F(AppFixture, UIManualSettingTest)
 {
     ASSERT_NE(window, nullptr);
     auto mockDispatcher = new MockMessageDispatcher(app);
-    auto dummySerial = new MockSerialTransport(app);
+    auto dummySerial = new NiceMock <MockSerialTransport>(app);
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(dummySerial);
     auto dial = window->findChild<QQuickItem*>("manualModeDial");
