@@ -5,7 +5,6 @@
 #include <chrono>
 #include "qstringoutput.h"
 
-using namespace Qt::Literals::StringLiterals;
 using namespace testing;
 
 class MessageDispatcherFixture : public  Test
@@ -22,33 +21,24 @@ protected:
 	}
 	MessageDispatcher* disp;
 };
-TEST_F(MessageDispatcherFixture, CorrectPostMessageTest)
+TEST_F(MessageDispatcherFixture, CorrectPostMessage)
 {
 	QSignalSpy modeSpy(disp, SIGNAL(modeChanged(const QString&)));
-	QSignalSpy sensorSpy(disp, SIGNAL(sensorIlluminanceChanged(int)));
+	QSignalSpy sensorSpy(disp, SIGNAL(sensorIlluminanceChanged(double)));
 	disp->postMessage("mode:test_mode1\n"); 
-	disp->postMessage("mode:test_mode"); 
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	disp->postMessage("2\n"); 
-	disp->postMessage("senso");
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	disp->postMessage("r:0.12345\n");
+	disp->postMessage("mode:test_mode2\n"); 
+	disp->postMessage("sensor:0.12345\n");
 
 	ASSERT_EQ(sensorSpy.count(), 1);
 	ASSERT_EQ(modeSpy.count(), 2);
-
-	QList<QVariant> args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(), 0.12);
-
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "test_mode1"_L1);
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "test_mode2"_L1);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(), 0.12);
+	EXPECT_STREQ(modeSpy.takeFirst().at(0).toString().toStdString().c_str(), "test_mode1");
+	EXPECT_STREQ(modeSpy.takeFirst().at(0).toString().toStdString().c_str(), "test_mode2");
 
 }
-TEST_F(MessageDispatcherFixture, RoundingPostMessageTest)
+TEST_F(MessageDispatcherFixture, RoundingSesnor)
 {
-	QSignalSpy sensorSpy(disp, SIGNAL(sensorValueChanged(int)));
+	QSignalSpy sensorSpy(disp, SIGNAL(sensorIlluminanceChanged(double)));
 	disp->postMessage("sensor:0.455\n");
 	disp->postMessage("sensor:0\n");
 	disp->postMessage("sensor:0.495\n");
@@ -56,69 +46,73 @@ TEST_F(MessageDispatcherFixture, RoundingPostMessageTest)
 	disp->postMessage("sensor:0.999\n");
 
 	ASSERT_EQ(sensorSpy.count(), 5);
-
-	QList<QVariant> args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(), 0.46);
-	args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(), 0);
-	args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(), 0.5);
-	args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(),1);
-	args = sensorSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toDouble(), 1);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(), 0.46);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(), 0);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(), 0.5);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(),1);
+	EXPECT_EQ(sensorSpy.takeFirst().at(0).toDouble(), 1);
 }
-TEST_F(MessageDispatcherFixture, RoundingManualSetTest)
+TEST_F(MessageDispatcherFixture, RoundingManual)
 {
-	QSignalSpy modeSpy(disp, SIGNAL(modeChanged(const QString&)));
+	QSignalSpy transferSpy(disp, SIGNAL(transferMessage(const QString&)));
 	disp->setManualIllumination(0.455);
 	disp->setManualIllumination(0);
 	disp->setManualIllumination(0.495);
 	disp->setManualIllumination(12);
 	disp->setManualIllumination(0.999);
 
-	ASSERT_EQ(modeSpy.count(), 5);
-
-	QList<QVariant> args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "sensor:0.46\n"_L1);
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "sensor:0\n");
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "sensor:0.5\n"_L1);
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "sensor:1\n");
-	args = modeSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "sensor:1\n"_L1);
+	ASSERT_EQ(transferSpy.count(), 5);
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "manual:0.46\n");
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "manual:0\n");
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "manual:0.5\n");
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "manual:1\n");
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "manual:1\n");
 }
-TEST_F(MessageDispatcherFixture, IncorrectPostTest)
+TEST_F(MessageDispatcherFixture, PostMessagesInPieces)
 {
 	QSignalSpy modeSpy(disp, SIGNAL(modeChanged(const QString&)));
-	QSignalSpy sensorSpy(disp, SIGNAL(sensorValueChanged(int)));
+	QSignalSpy sensorSpy(disp, SIGNAL(sensorIlluminanceChanged(double)));
+	disp->postMessage("sensor:");
+	disp->postMessage("0.123\n");
+	disp->postMessage("mo");
+	disp->postMessage("d");
+	disp->postMessage("e:manual\n");
+	disp->postMessage("sensor:0.5\nmode:sensor\ns");
+	disp->postMessage("ensor:0.1\n");
+
+	ASSERT_EQ(sensorSpy.count(), 3);
+	ASSERT_EQ(modeSpy.count(),2);
+	EXPECT_EQ(sensorSpy.takeFirst().first().toDouble(), 0.12);
+	EXPECT_EQ(sensorSpy.takeFirst().first().toDouble(), 0.5);
+	EXPECT_EQ(sensorSpy.takeFirst().first().toDouble(), 0.1);
+	EXPECT_STREQ(modeSpy.takeFirst().first().toString().toStdString().c_str(), "manual");
+	EXPECT_STREQ(modeSpy.takeFirst().first().toString().toStdString().c_str(), "sensor");
+}
+TEST_F(MessageDispatcherFixture, IncorrectPostMessage)
+{
+	QSignalSpy modeSpy(disp, SIGNAL(modeChanged(const QString&)));
+	QSignalSpy sensorSpy(disp, SIGNAL(sensorIlluminanceChanged(double)));
 	disp->postMessage("mde:test_mode1\n");
 	disp->postMessage("mode:\n");
 	disp->postMessage("mode\n");
 	disp->postMessage("sensor:abc\n");
 	disp->postMessage("sen\nsor:12\n");
 	disp->postMessage(":\n");
-	std::this_thread::sleep_for(std::chrono::seconds(2));
 	disp->postMessage("2\n");
 	disp->postMessage("senso");
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-	disp->postMessage("r:0.12345\n");
+	disp->postMessage("r:0.12345");
 
 	EXPECT_EQ(sensorSpy.count(), 0);
 	EXPECT_EQ(modeSpy.count(), 0);
 
 }
-TEST_F(MessageDispatcherFixture, modeSettingTest)
+TEST_F(MessageDispatcherFixture, SetMode)
 {
-	QSignalSpy transferSpy(disp, SIGNAL(transferMessage(const char*)));
-	disp->setMode("test_mode1"_L1);
-	disp->setMode("test_mode2"_L1);
+	QSignalSpy transferSpy(disp, SIGNAL(transferMessage(const QString&)));
+	disp->setMode("test_mode1");
+	disp->setMode("test_mode2");
 
 	ASSERT_EQ(transferSpy.count(),2);
-	QList<QVariant> args = transferSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "mode:test_mode1\n"_L1);
-	args = transferSpy.takeFirst();
-	EXPECT_EQ(args.at(0).toString(), "mode:test_mode2\n"_L1);
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "mode:test_mode1\n");
+	EXPECT_STREQ(transferSpy.takeFirst().first().toString().toStdString().c_str(), "mode:test_mode2\n");
 }
