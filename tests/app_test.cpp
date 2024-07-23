@@ -19,6 +19,11 @@ class AppFixture : public Test
 protected:
     void SetUp() override
     {
+        //char** dupArgv;
+        //for (size_t i = 0; i < _argc; i++)
+        //{
+        //    dupArgv[i] = strdup(_argv[i]);
+        //}
         app = new App(_argc, _argv);
         window = app->engine()->rootObjects().isEmpty() ? nullptr
             : (QQuickWindow*)app->engine()->rootObjects().first();
@@ -43,8 +48,24 @@ protected:
     }
     App* app;
     QQuickWindow* window;
+    char** dupArgv;
 };
 
+
+TEST_F(AppFixture, SerialAndDispatcherConnect)
+{
+    ASSERT_NE(window, nullptr);
+    auto mockDispatcher = new NiceMock < MockMessageDispatcher>(app);
+    auto mockSerial = new NiceMock<MockSerialTransport>(app);
+    app->setMessageDispatcher(mockDispatcher);
+    app->setSerialTransport(mockSerial);
+    EXPECT_CALL(*mockSerial, write(_)).Times(2);
+    EXPECT_CALL(*mockDispatcher, postMessage(_)).Times(2);
+    mockDispatcher->transferMessage("1");
+    mockDispatcher->transferMessage("2");
+    mockSerial->msgReceived("mode:test");
+    mockSerial->msgReceived("sensor:3");
+}
 TEST_F(AppFixture, UIPortsDisplay)
 {
     ASSERT_NE(window, nullptr);
@@ -159,8 +180,8 @@ TEST_F(AppFixture, UISettingWorkmodeTest)
     EXPECT_TRUE(manualModeRadio->property("checked").toBool());
     EXPECT_FALSE(sensorModeRadio->property("checked").toBool());
     emit mockDispatcher->modeChanged("sensor");
-    EXPECT_TRUE(manualModeRadio->property("checked").toBool());
-    EXPECT_FALSE(sensorModeRadio->property("checked").toBool());
+    EXPECT_FALSE(manualModeRadio->property("checked").toBool());
+    EXPECT_TRUE(sensorModeRadio->property("checked").toBool());
     EXPECT_CALL(*mockDispatcher, setMode(QString("sensor")))
         .Times(1);
     EXPECT_CALL(*mockDispatcher, setMode(QString("manual")))

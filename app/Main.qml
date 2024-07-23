@@ -68,6 +68,7 @@ Window {
             objectName: "modeBtnGroup"
             id: modeBtnGroup
         }
+
         ColumnLayout {
             anchors.fill:parent
             Row {

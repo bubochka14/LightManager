@@ -4,7 +4,9 @@
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
 #include <QQuickItem>
+#include <QTimer>
 #include <QSettings>
+#include <qquickwindow.h>
 #include "serialtransport.h"
 #include "messagedispatcher.h"
 #include "qloggingcategory.h"
@@ -12,9 +14,20 @@ Q_DECLARE_LOGGING_CATEGORY(LC_APP);
 class App : public QObject
 {
     Q_OBJECT;
-    Q_PROPERTY(quint32 connectionTimeout READ connectionTimeout WRITE setConnectionTimeout NOTIFY connectionTimeoutChanged);
-    Q_PROPERTY(SerialTransport* serialTransport READ serialTransport WRITE setSerialTransport NOTIFY serialTransportChanged);
-    Q_PROPERTY(MessageDispatcher* messageDispatcher READ messageDispatcher WRITE setMessageDispatcher NOTIFY messageDispatcherChanged);
+    Q_PROPERTY(quint32 connectionTimeout 
+        READ connectionTimeout 
+        WRITE setConnectionTimeout 
+        NOTIFY connectionTimeoutChanged);
+    Q_PROPERTY(SerialTransport* serialTransport 
+        READ serialTransport 
+        WRITE setSerialTransport 
+        NOTIFY serialTransportChanged 
+        FINAL);
+    Q_PROPERTY(MessageDispatcher* messageDispatcher 
+        READ messageDispatcher 
+        WRITE setMessageDispatcher 
+        NOTIFY messageDispatcherChanged 
+        FINAL);
 public:
     explicit App(int argc, char **argv);
     int exec();
@@ -34,14 +47,16 @@ signals:
     void messageDispatcherChanged();
 protected slots:
     void handleConnect(const QString& port);
+    void handleModeChange();
+    void handleManualChange();
 private:
     QGuiApplication _qApp;
     QQmlApplicationEngine* _engine;
-    SerialTransport* _serial;
-    MessageDispatcher* _disp;
-    QObject * _view;
+    QQuickWindow * _view;
     quint32 _timeout;
     QSettings _sett;
+    SerialTransport* _serial;
+    MessageDispatcher* _disp;
 };
 
 #endif // APP_H
