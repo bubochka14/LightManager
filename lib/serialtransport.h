@@ -6,6 +6,8 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 #include <atransport.h>
+#include <qloggingcategory.h>
+Q_DECLARE_LOGGING_CATEGORY(LC_SERIAL);
 class SerialTransport : public ATransport
 {
     Q_OBJECT;
@@ -23,6 +25,8 @@ public slots:
 signals:
     void availablePortsChanged();
     void openedPortChanged();
+private:
+    QSerialPort _serial;
 };
 
 #endif // SERIALTRANSPORT_H

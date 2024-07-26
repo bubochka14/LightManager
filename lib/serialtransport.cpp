@@ -1,26 +1,35 @@
 #include "serialtransport.h"
-
+Q_LOGGING_CATEGORY(LC_SERIAL,"SerialTransport")
 SerialTransport::SerialTransport(QObject *parent)
     : ATransport(parent)
 {
 }
 bool SerialTransport::openPort(const QString& port)
 {
-    return false;
+    _serial.setPortName(port);
+    if(!_serial.open(QIODevice::ReadWrite))
+    {
+        qCCritical(LC_SERIAL) << "Cannot open serial port: " << _serial.error();
+        return false;
+    }
+    return true;
 }
 int SerialTransport::write(const char* msg)
 {
-    return 0;
+    return _serial.write(msg);
 }
 QStringList SerialTransport::availablePorts() const
 {
-    return QStringList();
+    QStringList out;
+    for (auto& info : QSerialPortInfo::availablePorts())
+        out.push_back(info.portName());
+    return out;
 }
 QString SerialTransport::openedPort() const
 {
-    return "";
+    return _serial.portName();
 }
 void SerialTransport::closePort()
 {
-
+    _serial.close();
 }
