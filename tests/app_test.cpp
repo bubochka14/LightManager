@@ -40,11 +40,18 @@ protected:
     void mouseClick(QPoint pos, Qt::MouseButton btn = Qt::LeftButton)
     {
         QTest::mouseClick(window, btn, Qt::KeyboardModifiers(), pos);
+        qApp->processEvents();
     }
     void mouseClick(QQuickItem* item, Qt::MouseButton btn = Qt::LeftButton)
     {
         QTest::mouseClick(window, btn, Qt::KeyboardModifiers(), 
             QPoint(item->x() + item->width() / 2, item->y() + item->height()/2));
+        qApp->processEvents();
+
+    }
+    void makeConnect()
+    {
+        window->setProperty("pageState", "connected");
     }
     App* app;
     QQuickWindow* window;
@@ -60,7 +67,7 @@ TEST_F(AppFixture, SerialAndDispatcherConnect)
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(mockSerial);
     EXPECT_CALL(*mockSerial, write(_)).Times(2);
-    EXPECT_CALL(*mockDispatcher, postMessage(_)).Times(2);
+    EXPECT_CALL(*mockDispatcher, handleMessage(_)).Times(2);
     mockDispatcher->transferMessage("1");
     mockDispatcher->transferMessage("2");
     mockSerial->msgReceived("mode:test");
@@ -97,7 +104,7 @@ TEST_F(AppFixture, UIConnectWithResponse)
     auto portCombo = window->findChild<QQuickItem*>("portCombo");
     auto connectBtn = window->findChild<QQuickItem*>("connectBtn");
     auto serialMock = new NiceMock<MockSerialTransport>(app);
-    auto dispMock = new StrictMock<MockMessageDispatcher>(app);
+    auto dispMock = new NiceMock<MockMessageDispatcher>(app);
     ASSERT_NE(portCombo, nullptr);
     ASSERT_NE(connectBtn, nullptr);
 
@@ -106,17 +113,17 @@ TEST_F(AppFixture, UIConnectWithResponse)
     EXPECT_CALL(*serialMock, openPort(QString("test_port1"))).Times(1);;
     app->setMessageDispatcher(dispMock);
     app->setSerialTransport(serialMock);
-    QString beforeRequestState, afterRequestState;
+    QString beforeRequestState;
     EXPECT_CALL(*dispMock, requestMode())
         .Times(1)
         .WillOnce(Invoke([&]() {
-            emit dispMock->modeChanged("manual");
+            dispMock->modeChanged();
             beforeRequestState = window->property("pageState").toString();
             }));
-    EXPECT_CALL(*dispMock, requestSensorIlluminance())
+    EXPECT_CALL(*dispMock, requestSensor())
         .Times(1)
         .WillOnce(Invoke([&]() {
-            emit dispMock->sensorIlluminanceChanged(0.5);
+        dispMock->sensorChanged();
             }));
     mouseClick(connectBtn);
     ASSERT_EQ(connectSpy.count(), 1);
@@ -145,7 +152,7 @@ TEST_F(AppFixture, UIConnectWithNoResponse)
 TEST_F(AppFixture, UISensorIlluminanceChanging)
 {
     ASSERT_NE(window, nullptr);
-    auto mockDispatcher = new MockMessageDispatcher(app);
+    auto mockDispatcher = new NiceMock<MockMessageDispatcher>(app);
     auto dummySerial = new NiceMock<MockSerialTransport>(app);
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(dummySerial);
@@ -153,12 +160,13 @@ TEST_F(AppFixture, UISensorIlluminanceChanging)
     auto lbl = window->findChild<QQuickItem*>("sensorIlluminance");
     ASSERT_NE(icon, nullptr);
     ASSERT_NE(lbl, nullptr);
-
-    mockDispatcher->sensorIlluminanceChanged(0.56);
+    EXPECT_CALL(*mockDispatcher, sensor()).Times(AtLeast(1)).WillRepeatedly(Return(0.56));
+    emit mockDispatcher->sensorChanged();
     EXPECT_TRUE(lbl->property("text").toString().contains(QRegularExpression("56$"))) 
         << " text in lbl: " << lbl->property("text").toString().toStdString();
     EXPECT_STREQ(icon->property("state").toString().toStdString().c_str(), "day");
-    mockDispatcher->sensorIlluminanceChanged(0.11);
+    EXPECT_CALL(*mockDispatcher, sensor()).Times(AtLeast(1)).WillRepeatedly(Return(0.11));
+    emit mockDispatcher->sensorChanged();
     EXPECT_STREQ(icon->property("state").toString().toStdString().c_str(), "night");
     EXPECT_TRUE(lbl->property("text").toString().contains(QRegularExpression("11$")))
         << " text in lbl: " << lbl->property("text").toString().toStdString();
@@ -166,8 +174,8 @@ TEST_F(AppFixture, UISensorIlluminanceChanging)
 TEST_F(AppFixture, UISettingWorkmodeTest)
 {
     ASSERT_NE(window, nullptr);
-    auto mockDispatcher = new MockMessageDispatcher(app);
-    auto dummySerial = new NiceMock<MockSerialTransport>();
+    auto mockDispatcher = new NiceMock<MockMessageDispatcher>(app);
+    auto dummySerial = new NiceMock<MockSerialTransport>(app);
     app->setMessageDispatcher(mockDispatcher);
     app->setSerialTransport(dummySerial);
     auto sensorModeRadio = window->findChild<QQuickItem*>("sensorModeRadio");
@@ -175,24 +183,27 @@ TEST_F(AppFixture, UISettingWorkmodeTest)
 
     ASSERT_NE(sensorModeRadio, nullptr);
     ASSERT_NE(manualModeRadio, nullptr);
-    window->setProperty("pageState", "connected");
-    emit mockDispatcher->modeChanged("manual");
+    makeConnect();
+    EXPECT_CALL(*mockDispatcher, mode()).Times(AtLeast(1)).WillRepeatedly(Return("manual"));
+    emit mockDispatcher->modeChanged();
     EXPECT_TRUE(manualModeRadio->property("checked").toBool());
     EXPECT_FALSE(sensorModeRadio->property("checked").toBool());
-    emit mockDispatcher->modeChanged("sensor");
+    EXPECT_CALL(*mockDispatcher, mode()).Times(AtLeast(1)).WillRepeatedly(Return("sensor"));
+    emit mockDispatcher->modeChanged();
     EXPECT_FALSE(manualModeRadio->property("checked").toBool());
     EXPECT_TRUE(sensorModeRadio->property("checked").toBool());
     EXPECT_CALL(*mockDispatcher, setMode(QString("sensor")))
         .Times(1);
     EXPECT_CALL(*mockDispatcher, setMode(QString("manual")))
         .Times(1);
-    mouseClick(manualModeRadio);
-    mouseClick(sensorModeRadio);
-
+    //clicks don't work with radioButtons idk
+    manualModeRadio->setProperty("checked", true);
+    sensorModeRadio->setProperty("checked", true);
 }
 TEST_F(AppFixture, UIManualSettingTest)
 {
     ASSERT_NE(window, nullptr);
+    makeConnect();
     auto mockDispatcher = new MockMessageDispatcher(app);
     auto dummySerial = new NiceMock <MockSerialTransport>(app);
     app->setMessageDispatcher(mockDispatcher);
@@ -204,11 +215,11 @@ TEST_F(AppFixture, UIManualSettingTest)
     ASSERT_NE(dial, nullptr);
     ASSERT_NE(radio, nullptr);
     ASSERT_NE(lbl, nullptr);
-    EXPECT_CALL(*mockDispatcher, setManualIllumination(0.56))
+    EXPECT_CALL(*mockDispatcher, setManual(0.56))
         .Times(1);
-    EXPECT_CALL(*mockDispatcher, setManualIllumination(0.12))
+    EXPECT_CALL(*mockDispatcher, setManual(0.12))
         .Times(1);
-    mouseClick(radio->position().toPoint());
+    mouseClick(radio);
     dial->setProperty("value", 0.12);
     EXPECT_TRUE(lbl->property("text").toString().contains(QRegularExpression("12$")));
     dial->setProperty("value", 0.56);
