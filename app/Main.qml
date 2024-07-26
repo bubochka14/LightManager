@@ -8,12 +8,12 @@ Window {
     id: root
     objectName: "root"
     property var portNames
-    property real sensorIllum: 0
+    property real sensor: 0
     property real manual: 0
     property string mode: "sensor"
     property alias selectedPort: portCombo.currentText
     property alias pageState: rootPage.state
-    signal connectToPort(string port)
+    signal connectToPort(string  port)
     width: 480
     height: 300
     visible: true
@@ -23,6 +23,7 @@ Window {
         objectName: "rootPage"
         padding: 15
         anchors.fill: parent
+        onStateChanged: statusLbl.status = rootPage.state
         states: [
             State {
                 name: "disconnected"
@@ -61,8 +62,9 @@ Window {
         state: "disconnected"
         footer: Label {
             id: statusLbl
+            property string status
             objectName: "statusLbl"
-            text: qsTr("Status:") + " " + rootPage.state
+            text: qsTr("Status:") + " " + statusLbl.status
         }
         ButtonGroup {
             objectName: "modeBtnGroup"
@@ -118,7 +120,7 @@ Window {
                             id: sensorIcon
                             objectName: "sensorIcon"
                             states: ["night", "day"]
-                            state: root.sensorIllum >= 0.5 ? "day" : "night"
+                            state: root.sensor >= 0.5 ? "day" : "night"
                             anchors.horizontalCenter: parent.horizontalCenter
                             source: {
                                 if (sensorIcon.state == "night")
@@ -134,7 +136,7 @@ Window {
                             objectName: "sensorIlluminance"
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: qsTr("Outdoor Illuminance: ") + Math.round(
-                                      root.sensorIllum * 100)
+                                      root.sensor * 100)
                         }
                     }
                 }
@@ -149,7 +151,7 @@ Window {
                         checked: root.mode == "manual"
                         onCheckedChanged: if (checked)
                                               root.mode = "manual"
-                        text: qsTr("Вручную")
+                        text: qsTr("Manual")
                         ButtonGroup.group: modeBtnGroup
                     }
                     Column {
