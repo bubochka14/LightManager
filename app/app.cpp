@@ -24,7 +24,7 @@ App::App(int argc, char **argv)
                 _view->setProperty("portNames", _serial->availablePorts());
                 connect(_serial, &SerialTransport::msgReceived, this, [=](const char* msg)
                     {
-                        _disp->postMessage(QString::fromLocal8Bit(msg));
+                        _disp->handleMessage(QString::fromLocal8Bit(msg));
                     });
             }
             });
@@ -34,13 +34,13 @@ App::App(int argc, char **argv)
                 {
                     _serial->write(msg.toStdString().c_str());
                 });
-            connect(_disp, &MessageDispatcher::modeChanged, this, [=](const QString& msg)
+            connect(_disp, &MessageDispatcher::modeChanged, this, [=]()
                 {
-                    _view->setProperty("mode",msg);
+                    _view->setProperty("mode",_disp->mode());
                 });
-            connect(_disp, &MessageDispatcher::sensorIlluminanceChanged, this, [=](double val)
+            connect(_disp, &MessageDispatcher::sensorChanged, this, [=]()
                 {
-                    _view->setProperty("sensorIllum", val);
+                    _view->setProperty("sensor", _disp->sensor());
                 });
             });
         setSerialTransport(new SerialTransport(this));
@@ -52,7 +52,6 @@ App::App(int argc, char **argv)
             this, SLOT(handleManualChange()));
         connect(_view, SIGNAL(modeChanged()),
             this, SLOT(handleModeChange()));
-
         qCDebug(LC_APP) << "created.";
     }
 }
@@ -67,10 +66,10 @@ void App::handleConnect(const QString& port)
     QEventLoop loop; bool modeReceived = false, illumReceived = false;
     connect(_disp, &MessageDispatcher::modeChanged, &loop, [&]()
         {modeReceived = true; if (illumReceived) loop.exit(); });
-    connect(_disp, &MessageDispatcher::sensorIlluminanceChanged, &loop, [&]()
+    connect(_disp, &MessageDispatcher::sensorChanged, &loop, [&]()
         {illumReceived = true; if (modeReceived) loop.exit(); });
     connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
-    _disp->requestSensorIlluminance();
+    _disp->requestSensor();
     _disp->requestMode();
     timeoutTimer.start(2000);
     loop.exec();
@@ -149,5 +148,5 @@ void App::handleModeChange()
 }
 void App::handleManualChange()
 {
-    _disp->setManualIllumination(_view->property("manual").toDouble());
+    _disp->setManual(_view->property("manual").toDouble());
 }

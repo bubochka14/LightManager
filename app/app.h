@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
+#include <qqmlproperty.h>
 #include <QQuickItem>
 #include <QTimer>
 #include <QSettings>
