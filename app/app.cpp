@@ -57,7 +57,12 @@ App::App(int argc, char **argv)
 }
 void App::handleConnect(const QString& port)
 {
-    _serial->openPort(port);
+    _serial->closePort();
+    if (!_serial->openPort(port))
+    {
+        showError(tr("Cant open port %1: ").arg(port) + _serial->errorString());
+        return;
+    }
     _view->setProperty("pageState", "connecting");
 
     //waits until the timeoutTimer runs out or until mode and illum are received  
@@ -81,11 +86,13 @@ void App::handleConnect(const QString& port)
     else
     {
         _view->setProperty("pageState", "disconnected");
-        //add timeout logic
+        showError(tr("Port %1 is not responding.").arg(port));
+        _serial->closePort();
     }
 }
 void App::showError(const QString& text)
 {
+    QMetaObject::invokeMethod(_view, "showError", QVariant(text));
 }
 quint32 App::connectionTimeout() const
 {
@@ -155,5 +162,6 @@ void App::handleManualChange()
 }
 void App::setStatus(const QString& status)
 {
-
+    auto lbl = _view->findChild<QQuickItem*>("statusLbl");
+    lbl->setProperty("status", status);
 }

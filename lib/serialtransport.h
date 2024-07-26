@@ -18,6 +18,7 @@ public:
     explicit SerialTransport(QObject *parent = nullptr);
     virtual QStringList availablePorts() const;
     virtual QString openedPort() const;
+    virtual QString errorString() const;
 public slots:
     virtual bool openPort(const QString& port);
     virtual void closePort();
@@ -27,6 +28,7 @@ signals:
     void openedPortChanged();
 private:
     QSerialPort _serial;
+    QString _errorString;
 };
 
 #endif // SERIALTRANSPORT_H

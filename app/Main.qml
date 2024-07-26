@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import LightManager
 
 Window {
@@ -18,6 +19,12 @@ Window {
     height: 300
     visible: true
     title: qsTr("Light manager")
+    function showError(text)
+    {
+        errorDialog.informativeText = text
+        errorDialog.open()
+    }
+
     Page {
         id: rootPage
         objectName: "rootPage"
@@ -62,8 +69,8 @@ Window {
         state: "disconnected"
         footer: Label {
             id: statusLbl
+            objectName:  "statusLbl"
             property string status
-            objectName: "statusLbl"
             text: qsTr("Status:") + " " + statusLbl.status
         }
         ButtonGroup {
@@ -179,5 +186,12 @@ Window {
                 }
             }
         }
+    }
+    MessageDialog
+    {
+        id: errorDialog
+        text: qsTr("Error")
+        objectName: "errorDialog"
+        buttons: MessageDialog.Ok
     }
 }

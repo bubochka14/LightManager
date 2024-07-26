@@ -10,9 +10,14 @@ bool SerialTransport::openPort(const QString& port)
     if(!_serial.open(QIODevice::ReadWrite))
     {
         qCCritical(LC_SERIAL) << "Cannot open serial port: " << _serial.error();
+        _errorString = _serial.errorString();
         return false;
     }
     return true;
+}
+QString SerialTransport::errorString() const
+{
+    return _errorString;
 }
 int SerialTransport::write(const char* msg)
 {
