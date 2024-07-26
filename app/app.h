@@ -3,7 +3,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
-#include <qqmlproperty.h>
+#include <qmetaobject.h>
 #include <QQuickItem>
 #include <QTimer>
 #include <QSettings>
@@ -33,7 +33,6 @@ public:
     explicit App(int argc, char **argv);
     int exec();
     void exit(int code=0);
-public:
     QQmlApplicationEngine * engine() const;
     quint32 connectionTimeout() const;
     void setConnectionTimeout(quint32 other);
@@ -41,6 +40,8 @@ public:
     SerialTransport* serialTransport() const;
     void setMessageDispatcher(MessageDispatcher* other);
     MessageDispatcher* messageDispatcher() const;
+    void setStatus(const QString& status);
+    void showError(const QString& text);
     virtual ~App();
 signals:
     void connectionTimeoutChanged();
@@ -58,6 +59,7 @@ private:
     QSettings _sett;
     SerialTransport* _serial;
     MessageDispatcher* _disp;
+    QString _status;
 };
 
 #endif // APP_H

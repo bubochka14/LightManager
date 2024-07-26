@@ -226,6 +226,31 @@ TEST_F(AppFixture, UIManualSettingTest)
     EXPECT_TRUE(lbl->property("text").toString().contains(QRegularExpression("56$")));
 
 }
+TEST_F(AppFixture, UIStatusChange)
+{
+    ASSERT_NE(window, nullptr);
+    auto lbl = window->findChild<QQuickItem*>("statusLbl");
+    ASSERT_NE(lbl, nullptr);
+    EXPECT_EQ(lbl->property("status").toString(), "disconnected");
+    app->setStatus("testStatus");
+    EXPECT_EQ(lbl->property("status").toString(), "testStatus");
+    makeConnect();
+    EXPECT_EQ(lbl->property("status").toString(), "connected");
+    app->setStatus("testStatus2");
+    EXPECT_EQ(lbl->property("status").toString(), "testStatus2");
+}
+TEST_F(AppFixture, UIShowError)
+{
+    ASSERT_NE(window, nullptr);
+    auto dialog = window->findChild<QObject*>("errorDialog");
+    ASSERT_NE(dialog, nullptr);
+    EXPECT_FALSE(dialog->property("visible").toBool());
+    app->showError("test");
+    EXPECT_TRUE(dialog->property("visible").toBool());
+    EXPECT_EQ(dialog->property("text").toString(), "test");
+    QMetaObject::invokeMethod(dialog, "accept");
+    EXPECT_FALSE(dialog->property("visible").toBool());
+}
 int main(int argc, char** argv) {
     qDebug() << "Running tests with args: ";
     for (size_t i = 1; i < argc; i++)

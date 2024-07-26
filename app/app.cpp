@@ -84,6 +84,9 @@ void App::handleConnect(const QString& port)
         //add timeout logic
     }
 }
+void App::showError(const QString& text)
+{
+}
 quint32 App::connectionTimeout() const
 {
     return _timeout;
@@ -149,4 +152,8 @@ void App::handleModeChange()
 void App::handleManualChange()
 {
     _disp->setManual(_view->property("manual").toDouble());
+}
+void App::setStatus(const QString& status)
+{
+
 }
