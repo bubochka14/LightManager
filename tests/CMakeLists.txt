@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
 cmake_policy(SET CMP0135 NEW)
-
-enable_testing()
 ADD_SUBDIRECTORY (googletest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
