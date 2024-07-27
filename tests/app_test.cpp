@@ -110,7 +110,7 @@ TEST_F(AppFixture, UIConnectWithResponse)
 
     ON_CALL(*serialMock, availablePorts())
         .WillByDefault(Return(QStringList() << "test_port1"));
-    EXPECT_CALL(*serialMock, openPort(QString("test_port1"))).Times(1);;
+    EXPECT_CALL(*serialMock, openPort(QString("test_port1"))).Times(1).WillOnce(Return("true"));
     app->setMessageDispatcher(dispMock);
     app->setSerialTransport(serialMock);
     QString beforeRequestState;
