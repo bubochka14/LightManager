@@ -6,12 +6,19 @@ set(APP_SOURCES
     app.qrc
 
 )
+
 qt_add_executable(app
     MANUAL_FINALIZATION
     ${APP_SOURCES}
 )
+
 if ((MSVC) AND (MSVC_VERSION GREATER_EQUAL 1914))
-        target_compile_options(app PUBLIC "/Zc:__cplusplus")
+	target_link_options(app
+        PUBLIC
+        $<$<CONFIG:Debug>:/subsystem:CONSOLE>
+        $<$<CONFIG:Release>:/subsystem:WINDOWS;/ENTRY:mainCRTStartup>
+    )
+    target_compile_options(app PUBLIC "/Zc:__cplusplus")
 endif()
 target_link_libraries(app
     PRIVATE  Qt6::Core Qt6::Quick lightManager
