@@ -247,7 +247,7 @@ TEST_F(AppFixture, UIShowError)
     EXPECT_FALSE(dialog->property("visible").toBool());
     app->showError("test");
     EXPECT_TRUE(dialog->property("visible").toBool());
-    EXPECT_EQ(dialog->property("text").toString(), "test");
+    EXPECT_EQ(dialog->property("informativeText").toString(), "test");
     QMetaObject::invokeMethod(dialog, "accept");
     EXPECT_FALSE(dialog->property("visible").toBool());
 }
